@@ -23,7 +23,7 @@ func main() {
             mfaToken = newToken
             mfaTokenData := map[string]string{"token": mfaToken}
             jsonBytes, _ := json.MarshalIndent(mfaTokenData, "", "  ")
-            ioutil.WriteFile(`C:\Users\Morvay\OneDrive\Masaüstü\main\mfa_token2.json`, jsonBytes, 0644)
+            ioutil.WriteFile(`C:\Users\Morvay\OneDrive\Masaüstü\main\mfa_token.json`, jsonBytes, 0644)
             fmt.Println("MFA TOKEN KAYDEDİLDİ")
             mfaMutex.Unlock()
         } else {
