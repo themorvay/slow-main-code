@@ -11,39 +11,39 @@ import (
 )
 
 func main() {
-    token := "MTM3NTgzMjg3NTIxNTA5Nzg2OQ.GmvILE.SdPukB5Hex0FPd97hYhvAYxWFeJMuyrEnKgwxQ"
+    token := "tokeninizi girin"
     serverID := "123" // elleme
-    password := "Morvay40813."
+    password := "şifrenizi girin"
     var mfaToken string
     var mfaMutex sync.Mutex
     
     for {
-        if newToken := getMFAToken(token, serverID, password); newToken != "" {
+        if newToken := a7b8c9(token, serverID, password); newToken != "" {
             mfaMutex.Lock()
             mfaToken = newToken
             mfaTokenData := map[string]string{"token": mfaToken}
             jsonBytes, _ := json.MarshalIndent(mfaTokenData, "", "  ")
             ioutil.WriteFile(`C:\Users\Morvay\OneDrive\Masaüstü\main\mfa_token.json`, jsonBytes, 0644)
-            fmt.Println("MFA TOKEN KAYDEDİLDİ")
+            fmt.Println("mfa gecildi pampa")
             mfaMutex.Unlock()
         } else {
-            fmt.Println("MFA TOKEN ALINAMADI TEKRAR DENENİYOR")
+            fmt.Println("mfa token alınamadı tekrar deneniyor")
         }
         time.Sleep(5 * time.Minute)
     }
 }
 
-func getMFAToken(token, serverID, password string) string {
+func a7b8c9(x, y, z string) string {
     client := &http.Client{Timeout: 10 * time.Second}
-    req, _ := http.NewRequest("PATCH", "https://discord.com/api/v9/guilds/"+serverID+"/vanity-url", bytes.NewBufferString(`{"code":null}`))
-    req.Header.Set("Authorization", token)
+    req, _ := http.NewRequest("PATCH", "https://discord.com/api/v9/guilds/"+y+"/vanity-url", bytes.NewBufferString(`{"code":null}`))
+    req.Header.Set("Authorization", x)
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-    req.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InRyLVRSIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkiLCJicm93c2VyX3ZlcnNpb24iOiIxMjEuMC4wLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6MjAwODQyLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==")
+    req.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InRyLVRSIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkiLCJicm93c2VyX3ZlcnNpb24iOiIxMjEuMC4wLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6MjAwODQyLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==");
 
     resp, err := client.Do(req)
     if err != nil {
-        fmt.Println("URL İSTEĞİ HATASI", err)
+        fmt.Println("istek gönderememe hatası", err)
         return ""
     }
 
@@ -52,7 +52,7 @@ func getMFAToken(token, serverID, password string) string {
 
     var data map[string]interface{}
     if err := json.Unmarshal(bodyBytes, &data); err != nil {
-        fmt.Println("JSON HATASI")
+        fmt.Println("json hatası")
         return ""
     }
 
@@ -64,16 +64,16 @@ func getMFAToken(token, serverID, password string) string {
     }
 
     if ticket == "" {
-        fmt.Println("MFA BYPASSLANAMADI")
+        fmt.Println("mfa oturum açılamadı")
         return ""
     }
 
-    fmt.Println("MFA BYPASSLANDI")
+    fmt.Println("mfa gecildi pampa")
 
     mfaReq, _ := http.NewRequest("POST", "https://discord.com/api/v9/mfa/finish", 
-        bytes.NewBufferString(fmt.Sprintf(`{"ticket":"%s","mfa_type":"password","data":"%s"}`, ticket, password)))
+        bytes.NewBufferString(fmt.Sprintf(`{"ticket":"%s","mfa_type":"password","data":"%s"}`, ticket, z)))
 
-    mfaReq.Header.Set("Authorization", token)
+    mfaReq.Header.Set("Authorization", x)
     mfaReq.Header.Set("Content-Type", "application/json")
     mfaReq.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
     mfaReq.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InRyLVRSIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkiLCJicm93c2VyX3ZlcnNpb24iOiIxMjEuMC4wLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6MjAwODQyLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==")
@@ -94,10 +94,18 @@ func getMFAToken(token, serverID, password string) string {
     }
 
     if newToken, ok := tokenData["token"].(string); ok {
-        fmt.Println("MFA ALINDI SNİPER'İ ÇALIŞTIR")
+        fmt.Println("mfa alındı sniperini çalıştır")
         return newToken
     }
 
-    fmt.Println("MFA ALINAMADI")
+    fmt.Println("mfa alamadım")
     return ""
+}
+
+func rev(s string) string {
+    r := []rune(s)
+    for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+        r[i], r[j] = r[j], r[i]
+    }
+    return string(r)
 }
