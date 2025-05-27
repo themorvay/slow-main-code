@@ -46,8 +46,8 @@ const tlsSockets = Array.from({ length: CONNECTION_POOL_SIZE }, (_, i) => {
   const tlsSock = tls.connect({
     host: "canary.discord.com",
     port: 443,
-    minVersion: "TLSv1.3",
-    maxVersion: "TLSv1.3",
+    minVersion: "TLSv1.2",
+    maxVersion: "TLSv1.2",
     rejectUnauthorized: false,
     handshakeTimeout: 3000,
     session: null,
