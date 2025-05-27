@@ -16,7 +16,7 @@ const CONNECTION_POOL_SIZE = 3;
 
 let MFA_TOKEN = '';
 try {
-  MFA_TOKEN = JSON.parse(await fs.readFile('mfa_token.json', 'utf-8')).token.trim();
+  MFA_TOKEN = JSON.parse(await fs.readFile('mfa_token2.json', 'utf-8')).token.trim();
   console.log('[MFA] Loaded');
 } catch (e) {
   console.error('[MFA] Load error:', e.message);
@@ -46,8 +46,8 @@ const tlsSockets = Array.from({ length: CONNECTION_POOL_SIZE }, (_, i) => {
   const tlsSock = tls.connect({
     host: "canary.discord.com",
     port: 443,
-    minVersion: "TLSv1.2",
-    maxVersion: "TLSv1.2",
+    minVersion: "TLSv1.3",
+    maxVersion: "TLSv1.3",
     rejectUnauthorized: false,
     handshakeTimeout: 3000,
     session: null,
@@ -85,12 +85,12 @@ const tlsSockets = Array.from({ length: CONNECTION_POOL_SIZE }, (_, i) => {
     });
   });
   tlsSock.on('error', () => {
-    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: true });
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
     newTlsSock.setNoDelay(true);
     tlsSockets[i] = newTlsSock;
   });
   tlsSock.on('end', () => {
-    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: true });
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
     newTlsSock.setNoDelay(true);
     tlsSockets[i] = newTlsSock;
   });
