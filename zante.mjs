@@ -16,7 +16,7 @@ const CONNECTION_POOL_SIZE = 3;
 
 let MFA_TOKEN = '';
 try {
-  MFA_TOKEN = JSON.parse(await fs.readFile('mfa_token2.json', 'utf-8')).token.trim();
+  MFA_TOKEN = JSON.parse(await fs.readFile('mfa_token.json', 'utf-8')).token.trim();
   console.log('[MFA] Loaded');
 } catch (e) {
   console.error('[MFA] Load error:', e.message);
