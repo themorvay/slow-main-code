@@ -2,8 +2,6 @@ kahpelik etmeyene kahpelik etmek aklımdan ucundan geçmezdi açıkçası, sanal
 
 Kurulum: Bilgisayarınızda aynı dizinde olacak golang ile kod mfa_token.json diye dosya açacaksınız, ve 28.satırda C:\Users\Morvay\OneDrive\Masaüstü\main\mfa_token.json böyle bir yer var bunu kendi dizininize göre yapacaksınız kodu herhangi bir şekilde ellemedim veya bozmadım. Eğer hata alırsanız discord: morvxy eklersiniz herkese bol şansler dilerim.
 
-Morvay x Wuxi
-
 
 
 
