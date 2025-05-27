@@ -85,12 +85,12 @@ const tlsSockets = Array.from({ length: CONNECTION_POOL_SIZE }, (_, i) => {
     });
   });
   tlsSock.on('error', () => {
-    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: true });
     newTlsSock.setNoDelay(true);
     tlsSockets[i] = newTlsSock;
   });
   tlsSock.on('end', () => {
-    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: false });
+    const newTlsSock = tls.connect({ host: 'canary.discord.com', port: 443, minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3', rejectUnauthorized: true });
     newTlsSock.setNoDelay(true);
     tlsSockets[i] = newTlsSock;
   });
